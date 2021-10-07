@@ -88,12 +88,12 @@ def auto_submit(data, headers, formWid, collectWid, schoolTaskWid):
     code = j_data['code']
     message = j_data['message']
     if code == 0 or message == 'SUCCESS':
-        if server_key != "此处填写你的server酱key":
+        if server_key != "":
             send_message('恭喜，提交成功啦，打开今日校园app看看惊喜吧！！！')
         print('恭喜，提交成功啦，打开今日校园app看看惊喜吧！！！')
         return True
     else:
-        if server_key != "此处填写你的server酱key":
+        if server_key != "":
             send_message('提交失败，呜呜呜~_~')
         print("提交失败 >_<")
     print(message)
