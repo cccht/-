@@ -41,11 +41,7 @@ server_key = today['server_key']
 ApiUrl = "https://qust.campusphere.net"
 
 
-#######################################
-# 再次注意：此版本仅用作青岛科技大学崂山校区信息学院雷老师发布表单，如需作他用请注意表单内容是否一致或对代码进行二次修改
-# 如果青科人进行二次修改，可修改解析表单中信息 即 def parse_form() 函数即可修改相应表单填写内容
-# 一定注意：此脚本仅用于与真实信息一致时一键填写，如与正常表单不一致时请自行填写今日校园！！！
-# 解析表单
+
 def parse_form(text: str):
     form = []
     j_data = json.loads(text)
