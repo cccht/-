@@ -169,8 +169,8 @@ def index():
     if data_number == 0:
         print("当前无未填写表单。")
     # 例如: {"wid":"36646","formWid":"2323","priority":"4","subject":"9月29日研究生日报信息收集",
-    # "content":"https://wecres.cpdaily.com/counselor/1018615895163461/html/c6ba48ad89884b8cb8619119601f4198.html",
-    # "senderUserName":"雷静(信息科学技术学院)","createTime":"2021-09-28 14:23","startTime":"2021-09-29 08:00",
+    # "content":"https://wecres.cpdaily.com/counselor/*/html/*.html",
+    # "senderUserName":"雷*(信息科学技术学院)","createTime":"2021-09-28 14:23","startTime":"2021-09-29 08:00",
     # "endTime":"2021-09-29 23:59","currentTime":"2021-09-29 14:46:21","isHandled":0,"isRead":1}
     rows = datas['rows'][0]
     collectWid = rows['wid']
