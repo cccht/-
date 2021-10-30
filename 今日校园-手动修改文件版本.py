@@ -2,17 +2,23 @@
 # @Author  : cccht
 # @Time    : 2021/10/7 18:33
 # @Github  : https://github.com/cccht
-
-
+import hashlib
 import json
 import requests
+from Crypto.Cipher import AES
+import base64
 
 # 此处填写用户名 即学号
+import pyaes
+
 username = ""
 # 此处填写相应密码
 password = ""
 # 此处可填写server酱用于接收微信通知
 server_key = ""
+# 此处填写设备 Id（即手机id）
+deviceId = ""
+
 
 #######################################
 # 以下不需修改直接运行即可
@@ -20,7 +26,9 @@ server_key = ""
 # 如果青科人进行二次修改，可修改解析表单中信息 即 def parse_form() 函数即可修改相应表单填写内容
 # 一定注意：此脚本仅用于与真实信息一致时一键填写，如与正常表单不一致时请自行填写今日校园！！！
 ApiUrl = "https://qust.campusphere.net"
-
+DESKEY = 'b3L26XNL'
+AESKEY = 'ytUQ7l2ZZu8mLvJZ'
+APPVERSION = '9.0.12'
 
 # 解析表单
 def parse_form(text: str):
@@ -29,6 +37,7 @@ def parse_form(text: str):
     datas = j_data['datas']
     question_number = datas['totalSize']  # 问题总数
     question_list = datas['rows']  # 问题列表
+
     # print('共计{}个问题...'.format(question_number))
 
     # 处理地理位置选择
@@ -70,30 +79,85 @@ def parse_form(text: str):
     return form
 
 
+def AESEncrypt(s, key, iv=b'\x01\x02\x03\x04\x05\x06\x07\x08\t\x01\x02\x03\x04\x05\x06\x07'):
+    Encrypter = pyaes.Encrypter(pyaes.AESModeOfOperationCBC(key.encode('utf-8'), iv))
+    Encrypted = Encrypter.feed(s)
+    Encrypted += Encrypter.feed()
+    return base64.b64encode(Encrypted).decode()
+
+
+def GenBodyString(form):
+    return AESEncrypt(json.dumps(form), AESKEY)
+
+
+def SignForm(bodyString):
+    tosign = {
+        "appVersion": '9.0.12',
+        "bodyString": bodyString,
+        "deviceId": deviceId,
+        "lat": 36.12802101,
+        "lon": 120.4913785279999,
+        "model": "MI 6",
+        "systemName": "android",
+        "systemVersion": "7.1.1",
+        "userId": username,
+    }
+    signStr = ""
+    for i in tosign:
+        if signStr:
+            signStr += "&"
+        signStr += "{}={}".format(i, tosign[i])
+    signStr += "&{}".format(AESKEY)
+    return hashlib.md5(signStr.encode()).hexdigest()
+
+
 # 自动提交
 def auto_submit(data, headers, formWid, collectWid, schoolTaskWid):
     url = ApiUrl + '/wec-counselor-collector-apps/stu/collector/submitForm'
     headers["Content-Type"] = "application/json"
-    headers["Cpdaily-Extension"] = '64JITpWPkKut+YRGo4AT3C+00Xlutn2x6CEymZBHGv3BB3a7UiUBqy5MuSGE xoY0Jd6RuqRwQcJBwKWbAhDA/uaElTmZuMs/A5KZp9E98jAqtepGWgoypbHP hLzl7SV8yRKKgY1Dk+6kTQkzyuHcDN/yLolnJS1Dd+OsikAd+TlYx1q+AcTS qjd2YnfRN1qP8mdxZSOOii8LMK/NrN3FtM6etzP1Q0I7qwzEe1jzHKxpzRxd QYxPD1mmepm2omxwCk5KEwHuxg5aM6TcxPSXzJL47xajKG8B'  # 这里如果不添加会提示今日校园版本过低
-    params = {
+    headers["User-Agent"] = '今日校园/1 CFNetwork/1128.0.1 Darwin/19.6.0'.encode('utf-8')
+    headers["Cpdaily-Extension"] = '64JITpWPkKteVjjbeN0fQ9itX23mYPTHqi0iNh2pmNCzQ3mXksu9HByXtcsD Evb31xHlfIR2UZoyE8Dp8/OFKKFps2/IpzfvB9n6jGcKj3EDK+VxkEij1Qbn wzQ2MuwienqC7vlMCAbTKssxnzWsnHvS/RRMJqENe+9azpS7yimfaivrCEqf Kxivn4EGaY0c8Hkkesf5BZHgv9K+p7r94bkEotuO+b6/+y1P6KsS4bgwb/0D xNmgn8tsBZ+D3MZ43ns2TK+OLlBtI1/J3PNptw=='  # 这里如果不添加会提示今日校园版本过低
+    form = {
         "formWid": formWid,
-        "address": '山东省青岛市崂山区松岭路99号',
+        "address": '山东省青岛市崂山区松岭路',
         "collectWid": collectWid,
         "schoolTaskWid": schoolTaskWid,
         "form": data,
-        "uaIsCpadaily": True
+        "uaIsCpadaily": True,
+        "latitude": 36.12802100890081,
+        "longitude": 120.4913785279999
+    }
+    bodyString = GenBodyString(form)
+    # 解码！！！
+    # aes = AES.new("ytUQ7l2ZZu8mLvJZ".encode("UTF-8"), AES.MODE_CBC,
+    #               b'\x01\x02\x03\x04\x05\x06\x07\x08\t\x01\x02\x03\x04\x05\x06\x07')
+    # res = aes.decrypt(base64.b64decode(bodyString))
+    # print(res)
+    params = {
+        "lon": "120.49137853",
+        "version": "first_v2",
+        "calVersion": "firstv",
+        "deviceId": deviceId,
+        "userId": username,
+        "systemName": "android",
+        "lat": "36.12802101",
+        "systemVersion": "7.1.1",
+        "appVersion": "9.0.12",
+        "model": "MI 6",
+        "sign": SignForm(bodyString),
+        "bodyString": bodyString
     }
     response = requests.post(url=url, headers=headers, data=json.dumps(params))
     j_data = json.loads(response.text)
     code = j_data['code']
     message = j_data['message']
     if code == 0 or message == 'SUCCESS':
-        if server_key != "":
+        if server_key != "此处填写你的server酱key":
             send_message('恭喜，提交成功啦，打开今日校园app看看惊喜吧！！！')
         print('恭喜，提交成功啦，打开今日校园app看看惊喜吧！！！')
         return True
     else:
-        if server_key != "":
+        if server_key != "此处填写你的server酱key":
             send_message('提交失败，呜呜呜~_~')
         print("提交失败 >_<")
     print(message)
@@ -168,10 +232,6 @@ def index():
     data_number = datas['totalSize']
     if data_number == 0:
         print("当前无未填写表单。")
-    # 例如: {"wid":"36646","formWid":"2323","priority":"4","subject":"9月29日研究生日报信息收集",
-    # "content":"https://wecres.cpdaily.com/counselor/*/html/*.html",
-    # "senderUserName":"雷*(信息科学技术学院)","createTime":"2021-09-28 14:23","startTime":"2021-09-29 08:00",
-    # "endTime":"2021-09-29 23:59","currentTime":"2021-09-29 14:46:21","isHandled":0,"isRead":1}
     rows = datas['rows'][0]
     collectWid = rows['wid']
     formWid = rows['formWid']
