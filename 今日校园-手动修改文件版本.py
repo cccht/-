@@ -125,7 +125,8 @@ def auto_submit(data, headers, formWid, collectWid, schoolTaskWid):
         "form": data,
         "uaIsCpadaily": True,
         "latitude": 36.12802100890081,
-        "longitude": 120.4913785279999
+        "longitude": 120.4913785279999,
+        'instanceWid': instanceWid
     }
     bodyString = GenBodyString(form)
     # 解码！！！
@@ -237,7 +238,7 @@ def index():
     formWid = rows['formWid']
     # 获取表单详情
     detail_url = ApiUrl + '/wec-counselor-collector-apps/stu/collector/detailCollector'
-    get_form = requests.post(detail_url, data=json.dumps({'collectorWid': collectWid}), headers=headers,
+    get_form = requests.post(detail_url, data=json.dumps({'collectorWid': collectWid,'instanceWid':instanceWid}), headers=headers,
                              allow_redirects=False)
     j_data = json.loads(get_form.text)
     datas = j_data['datas']
@@ -248,7 +249,8 @@ def index():
         'pageNumber': 1,
         'pageSize': 20,
         'formWid': rows['formWid'],
-        'collectorWid': rows['wid']
+        'collectorWid': rows['wid'],
+        'instanceWid': instanceWid
     }
     data = json.dumps(data)
     response = requests.post(url=url, headers=headers, data=data)
