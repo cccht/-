@@ -112,7 +112,7 @@ def SignForm(bodyString):
 
 
 # 自动提交
-def auto_submit(data, headers, formWid, collectWid, schoolTaskWid):
+def auto_submit(data, headers, formWid, collectWid, schoolTaskWid,instanceWid):
     url = ApiUrl + '/wec-counselor-collector-apps/stu/collector/submitForm'
     headers["Content-Type"] = "application/json"
     headers["User-Agent"] = '今日校园/1 CFNetwork/1128.0.1 Darwin/19.6.0'.encode('utf-8')
@@ -236,6 +236,7 @@ def index():
     rows = datas['rows'][0]
     collectWid = rows['wid']
     formWid = rows['formWid']
+    instanceWid = rows['instanceWid']
     # 获取表单详情
     detail_url = ApiUrl + '/wec-counselor-collector-apps/stu/collector/detailCollector'
     get_form = requests.post(detail_url, data=json.dumps({'collectorWid': collectWid,'instanceWid':instanceWid}), headers=headers,
@@ -257,7 +258,7 @@ def index():
     # 解析表单问题并填写
     form_data = parse_form(response.text)
     # 自动提交表单问题
-    auto_submit(form_data, headers, formWid, collectWid, schoolTaskWid)
+    auto_submit(form_data, headers, formWid, collectWid, schoolTaskWid, instanceWid)
     return None
 
 
